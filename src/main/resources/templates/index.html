@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
+</head>
+<body>
+<div id="main" style="width: 600px;height:400px;"></div>
+
+<button onclick="ajax('/read',null,res =>{alert(res)},'get','json')">读取Excel数据</button>
+<script>
+    //新增确诊
+    seriesa = [];
+    //新增死亡
+    seriesb = [];
+    //日期
+    xAxisData = [];
+    // 指定图表的配置项和数据
+    /*var option = {
+        title: {
+            text: '新馆肺炎图形表'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['新增确诊', '新增死亡']
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {}
+            }
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: xAxisData
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                name: '新增确诊',
+                type: 'line',
+                stack: '总量',
+                data: seriesa
+            },
+            {
+                name: '新增死亡',
+                type: 'line',
+                stack: '总量',
+                data: seriesb
+            }
+        ]
+    };*/
+
+    var colors = ['#5793f3', '#d14a61', '#675bba'];
+    option = {
+        color: colors,
+
+        tooltip: {
+            trigger: 'none',
+            axisPointer: {
+                type: 'cross'
+            }
+        },
+        legend: {
+            data:['新增确诊', '新增死亡']
+        },
+        grid: {
+            top: 70,
+            bottom: 50
+        },
+        xAxis: [
+            {
+                type: 'category',
+                axisTick: {
+                    alignWithLabel: true
+                },
+                axisLine: {
+                    onZero: false,
+                    lineStyle: {
+                        color: colors[1]
+                    }
+                },
+                axisPointer: {
+                    label: {
+                        formatter: function (params) {
+                            return '新增死亡  ' + params.value
+                                + (params.seriesData.length ? '：' + params.seriesData[0].data : '');
+                        }
+                    }
+                },
+                data: xAxisData
+            },
+            {
+                type: 'category',
+                axisTick: {
+                    alignWithLabel: true
+                },
+                axisLine: {
+                    onZero: false,
+                    lineStyle: {
+                        color: colors[0]
+                    }
+                },
+                axisPointer: {
+                    label: {
+                        formatter: function (params) {
+                            return '新增确诊  ' + params.value
+                                + (params.seriesData.length ? '：' + params.seriesData[0].data : '');
+                        }
+                    }
+                },
+                data: xAxisData
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value'
+            }
+        ],
+        series: [
+            {
+                name: '新增确诊',
+                type: 'line',
+                xAxisIndex: 1,
+                smooth: true,
+                data: seriesa
+            },
+            {
+                name: '新增死亡',
+                type: 'line',
+                smooth: true,
+                data: seriesb
+            }
+        ]
+    };
+
+
+
+
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('main'));
+    ajax('/getAll',null,res => {
+        let parse = JSON.parse(res);
+        for (let i = 0; i < parse.length; i++) {
+            seriesa.push(parse[i].seriesa);
+            seriesb.push(parse[i].seriesb);
+            xAxisData.push(parse[i].xAxisData)
+            console.log(xAxisData[i]);
+        }
+        console.log(option.series[0].data)
+        console.log(option);
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    },'get','json');
+
+    function ajax(url, para, cb, method, type) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        /**
+         * onreadystatechange
+         * @ignore
+         */
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                //ie error with 1223 and opera with 304 or 0
+                if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304 || xhr.status === 1223 || xhr.status === 0) {
+                    if (typeof(type) == "undefined" && xhr.responseText) {
+                        cb(eval("(" + xhr.responseText + ")")); //不容错，以便于排查json错误
+                    } else {
+                        cb(xhr.responseText);
+                    }
+                }
+                xhr = null;
+            }
+        };
+        xhr.send(para);
+        return xhr;
+    }
+
+</script>
+</body>
+</html>
